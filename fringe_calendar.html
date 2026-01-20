@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fringe 2026 Calendar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: rgb(30, 41, 59);
+            --primary: #22d3ee;
+            --accent: #f43f5e;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: "Outfit", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 1.2rem;
+            background: radial-gradient(circle at top right, #1e293b, #0f172a);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #22d3ee, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .calendars-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.2rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .calendar-card {
+            background: var(--card-bg);
+            border: 1px solid rgb(255, 255, 255);
+            border-radius: 20px;
+            padding: 1.2rem;
+            position: relative;
+        }
+
+        .calendar-card:has(.star:hover) {
+            z-index: 9999;
+        }
+
+        .calendar-header {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+        }
+
+        .day-label {
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            padding: 0.5rem 0;
+        }
+
+        .day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            background: rgb(19, 14, 32);
+            font-size: 1.8rem;
+        }
+
+        .day:hover {
+            background: rgb(110, 112, 45);
+            transform: translateY(-2px);
+        }
+
+        .day:has(.star:hover) {
+            z-index: 9999;
+        }
+
+        .day.has-events::after {
+            content: "";
+            position: absolute;
+            bottom: 8px;
+            width: 8px;
+            height: 8px;
+            background: rgb(138, 22, 128);
+            border-radius: 50%;
+            opacity: 0.75;
+        }
+
+        .day-stars {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: 2px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1px;
+            justify-content: center;
+        }
+
+        .star {
+            font-size: 1rem;
+            transition: transform 0.1s;
+            cursor: help;
+            position: relative;
+        }
+
+        .star:hover {
+            transform: scale(1.4);
+            z-index: 9999;
+        }
+
+        .star .tooltip {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translate(-50%, 26px);
+            background: rgb(6, 10, 65);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 99999;
+            backdrop-filter: none;
+            isolation: isolate;
+        }
+
+        .star:hover .tooltip {
+            opacity: 1;
+            font-size: 14px;
+        }
+
+        .day.selected {
+            background: var(--primary);
+            color: var(--bg);
+            font-weight: 600;
+        }
+
+        .day.empty {
+            visibility: hidden;
+        }
+
+        .details-panel {
+            background: var(--card-bg);
+            border: 1px solid rgb(40, 40, 45);
+            border-radius: 20px;
+            padding: 2rem;
+            min-height: 200px;
+        }
+
+        .selected-date-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            border-bottom: 1px solid rgb(40, 40, 45);
+            padding-bottom: 0.5rem;
+        }
+
+        .event-item {
+            margin-bottom: 1.5rem;
+            padding: 1.25rem;
+            background: rgb(23, 30, 41);
+            border-radius: 12px;
+            border-left: 4px solid var(--text-dim);
+            transition: all 0.2s;
+        }
+
+        .event-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .event-venue {
+            color: var(--primary);
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+            font-weight: 500;
+        }
+
+        .event-desc {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .event-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .event-item:target {
+            animation: highlight-target 2s ease-out;
+        }
+
+        @keyframes highlight-target {
+            0% {
+                box-shadow: 0 0 0px var(--primary);
+                border-left-width: 4px;
+            }
+
+            20% {
+                box-shadow: 0 0 20px var(--primary);
+                border-left-width: 8px;
+            }
+
+            100% {
+                box-shadow: 0 0 0px var(--primary);
+                border-left-width: 4px;
+            }
+        }
+
+        .no-events {
+            text-align: center;
+            color: var(--text-dim);
+            padding: 3rem;
+            font-style: italic;
+        }
+
+        .priority-badge {
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 99px;
+            font-weight: 700;
+            margin-left: 0.5rem;
+            color: #000;
+            box-shadow: 0 0 10px rgb(0, 0, 0);
+        }
+
+        /* Timeline Styles */
+        .timeline-wrapper {
+            margin-bottom: 2rem;
+            background: rgb(20, 27, 38);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgb(28, 35, 46);
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .timeline-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            background: rgb(12, 14, 22);
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: crosshair;
+            user-select: none;
+        }
+
+        .timeline-x-axis {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 25px;
+            display: flex;
+            border-bottom: 1px solid rgb(40, 40, 45);
+            background: rgb(28, 35, 46);
+        }
+
+        .time-label {
+            flex: 1;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-align: left;
+            padding-left: 4px;
+            border-left: 1px solid rgb(40, 40, 45);
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .timeline-grid {
+            position: absolute;
+            top: 25px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            pointer-events: none;
+        }
+
+        .grid-line {
+            flex: 1;
+            border-left: 1px solid rgb(28, 35, 46);
+            height: 100%;
+        }
+
+        .timeline-content {
+            position: absolute;
+            top: 25px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        .show-bar {
+            position: absolute;
+            height: 28px;
+            border-radius: 4px;
+            background: var(--primary);
+            opacity: 0.8;
+            border: 1px solid rgb(66, 66, 77);
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 0 8px;
+            line-height: 26px;
+            font-size: 0.75rem;
+            color: #000;
+            font-weight: 700;
+            z-index: 10;
+        }
+
+        .show-bar:hover {
+            opacity: 1;
+            transform: scale(1.02);
+            z-index: 100;
+            box-shadow: 0 0 15px var(--primary);
+        }
+
+        .show-bar.priority {
+            background: var(--accent);
+        }
+
+        .show-bar.priority:hover {
+            box-shadow: 0 0 15px var(--accent);
+        }
+
+        .zoom-selection {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            background: rgba(52, 152, 219, 0.3);
+            border: 1px solid var(--primary);
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .btn-reset {
+            background: var(--primary);
+            color: #000;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: none;
+        }
+
+        .btn-reset:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Wellington Fringe 2026</h1>
+            <p style="color: var(--text-dim)">The data on this page might not be correct so check <a class="event-link"
+                    href="https://wellingtonfringe.co.nz/"
+                    style="text-decoration: underline;">wellingtonfringe.co.nz</a> for the latest information.</p>
+            <p style="color: var(--text)">Click a date to see shows on that day.</p>
+
+        </header>
+        <div class="calendars-grid" id="calendars"></div>
+        <div class="details-panel" id="details">
+            <div class="no-events">Select a day on the calendar to see all scheduled shows</div>
+        </div>
+    </div>
+    <script src="./fringe_data.js"></script>
+    <script>
+        const dateMap = {};
+        ALL_EVENTS.forEach(event => {
+            event.schedule.split(",").forEach(dateStr => {
+                const d = dateStr.trim();
+                if (!d) return;
+                if (!dateMap[d]) dateMap[d] = [];
+                const link = event.link.trim().replace(/\/$/, "");
+                dateMap[d].push({ ...event, isPriority: !!PRIORITY_COLORS[link], color: PRIORITY_COLORS[link] });
+            });
+        });
+        function renderCalendar(month, year) {
+            const card = document.createElement("div"); card.className = "calendar-card";
+            const date = new Date(year, month); const monthName = new Intl.DateTimeFormat("en-US", { month: "long" }).format(date);
+            card.innerHTML = "<div class='calendar-header'>" + monthName + " " + year + "</div>";
+            const grid = document.createElement("div"); grid.className = "days-grid";
+            ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach(d => { const el = document.createElement("div"); el.className = "day-label"; el.innerText = d; grid.appendChild(el); });
+            const firstDay = new Date(year, month, 1).getDay(); const daysInMonth = new Date(year, month + 1, 0).getDate();
+            for (let i = 0; i < firstDay; i++) { const e = document.createElement("div"); e.className = "day empty"; grid.appendChild(e); }
+            for (let day = 1; day <= daysInMonth; day++) {
+                const ds = day + " " + monthName + " " + year; const evs = dateMap[ds] || [];
+                const el = document.createElement("div"); el.className = "day";
+                if (evs.length > 0) el.classList.add("has-events");
+                const starsDiv = document.createElement("div"); starsDiv.className = "day-stars";
+                const seen = new Set();
+                evs.filter(e => e.isPriority).forEach(e => {
+                    const key = e.title + "|" + (e.time || "");
+                    if (seen.has(key)) return;
+                    seen.add(key);
+                    const s = document.createElement("span"); s.className = "star"; s.style.color = e.color;
+                    const starText = document.createTextNode("★");
+                    const tooltip = document.createElement("span"); tooltip.className = "tooltip";
+                    tooltip.innerText = e.title + (e.time ? " (@" + e.time + ")" : "");
+                    s.appendChild(starText);
+                    s.appendChild(tooltip);
+                    starsDiv.appendChild(s);
+                });
+                el.appendChild(starsDiv);
+                const dText = document.createElement("span"); dText.innerText = day; el.appendChild(dText);
+                el.onclick = () => selectDay(ds, el); grid.appendChild(el);
+            }
+            card.appendChild(grid); return card;
+        }
+        function parseTime(t) {
+            if (!t) return 9999;
+            const m = t.match(/(\d+):(\d+)\s*(am|pm)/i);
+            if (!m) return 9999;
+            let h = parseInt(m[1]), min = parseInt(m[2]), p = m[3].toLowerCase();
+            if (p === "pm" && h < 12) h += 12;
+            if (p === "am" && h === 12) h = 0;
+            return h * 100 + min;
+        }
+        function selectDay(ds, el) {
+            document.querySelectorAll(".day").forEach(d => d.classList.remove("selected")); el.classList.add("selected");
+            const det = document.getElementById("details"); const evs = dateMap[ds] || [];
+            if (evs.length === 0) { det.innerHTML = "<div class='selected-date-title'>" + ds + "</div><div class='no-events'>No events</div>"; return; }
+            det.innerHTML = "<div class='selected-date-title'>" + ds + " (" + evs.length + " Shows)</div>";
+            const seen = new Set();
+            evs.sort((a, b) => {
+                const ta = parseTime(a.time), tb = parseTime(b.time);
+                if (ta !== tb) return ta - tb;
+                return (b.isPriority ? 1 : 0) - (a.isPriority ? 1 : 0);
+            });
+
+            renderTimeline(evs, ds);
+
+            evs.forEach(e => {
+                const key = e.title + "|" + (e.time || "") + "|" + e.loc;
+                const safeId = "show-" + btoa(unescape(encodeURIComponent(key))).replace(/=/g, "");
+                if (seen.has(key)) return;
+                seen.add(key);
+                const i = document.createElement("div"); i.className = "event-item"; i.id = safeId;
+                if (e.isPriority) { i.classList.add("priority"); i.style.borderLeftColor = e.color; i.style.background = e.color + "11"; }
+                i.innerHTML = "<div class='event-title'>" + e.title + (e.isPriority ? "<span class='priority-badge' style='background:" + e.color + "'>★ Fav</span>" : "") + "</div>" +
+                    "<div class='event-venue'>" + e.loc + (e.time ? " • " + e.time : "") + "</div><div class='event-desc'>" + e.desc + "</div>" +
+                    "<a href='" + e.link + "' class='event-link' target='_blank'>View Website →</a>";
+                det.appendChild(i);
+            });
+            det.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+
+        function renderTimeline(evs, ds, zoomRange = null) {
+            const det = document.getElementById("details");
+            let wrapper = document.querySelector(".timeline-wrapper");
+            if (!wrapper) {
+                wrapper = document.createElement("div"); wrapper.className = "timeline-wrapper";
+                det.appendChild(wrapper);
+            }
+            wrapper.innerHTML = "";
+
+            const header = document.createElement("div"); header.className = "timeline-header";
+            header.innerHTML = "<h3>Show Schedule Timeline <small style='font-weight:400; color:var(--text-dim); font-size:0.8rem'>(Click and Drag from bottom of this table to select the shows to zoom into.)</small></h3>";
+            const resetBtn = document.createElement("button"); resetBtn.className = "btn-reset"; resetBtn.innerText = "Reset Zoom";
+            resetBtn.style.display = zoomRange ? "block" : "none";
+            resetBtn.onclick = () => renderTimeline(evs, ds, null);
+            header.appendChild(resetBtn);
+            wrapper.appendChild(header);
+
+            const container = document.createElement("div"); container.className = "timeline-container";
+
+            const startMin = zoomRange ? zoomRange.start : (6 * 60);
+            const endMin = zoomRange ? zoomRange.end : (24 * 60);
+            const totalMinutes = endMin - startMin;
+
+            // Generate X-Axis Labels (every hour or every 15 mins if zoomed)
+            const xAxis = document.createElement("div"); xAxis.className = "timeline-x-axis";
+            const step = totalMinutes > 180 ? 60 : 15;
+            for (let m = startMin; m < endMin; m += step) {
+                const label = document.createElement("div"); label.className = "time-label";
+                const h = Math.floor(m / 60);
+                const mins = Math.floor(m % 60);
+                label.innerText = (h < 10 ? "0" : "") + h + ":" + (mins < 10 ? "0" : "") + mins;
+                label.style.flex = "0 0 " + (step / totalMinutes * 100) + "%";
+                xAxis.appendChild(label);
+            }
+            container.appendChild(xAxis);
+
+            // GridLines
+            const grid = document.createElement("div"); grid.className = "timeline-grid";
+            for (let m = startMin; m < endMin; m += step) {
+                const line = document.createElement("div"); line.className = "grid-line";
+                line.style.flex = "0 0 " + (step / totalMinutes * 100) + "%";
+                grid.appendChild(line);
+            }
+            container.appendChild(grid);
+
+            const content = document.createElement("div"); content.className = "timeline-content";
+            const slots = [];
+
+            // Filter and position shows
+            evs.forEach((e, idx) => {
+                const t = parseTime(e.time);
+                if (t === 9999) return;
+
+                const showStartMin = (Math.floor(t / 100) * 60 + (t % 100));
+                const duration = 60;
+                const showEndMin = showStartMin + duration;
+
+                // Check if in zoom range
+                if (showEndMin <= startMin || showStartMin >= endMin) return;
+
+                let slotIndex = 0;
+                while (true) {
+                    if (!slots[slotIndex]) slots[slotIndex] = [];
+                    const overlap = slots[slotIndex].some(s => {
+                        return (showStartMin < s.end && showEndMin > s.start);
+                    });
+                    if (!overlap) {
+                        slots[slotIndex].push({ start: showStartMin, end: showEndMin });
+                        break;
+                    }
+                    slotIndex++;
+                }
+
+                const bar = document.createElement("a");
+                bar.className = "show-bar" + (e.isPriority ? " priority" : "");
+                const key = e.title + "|" + (e.time || "") + "|" + e.loc;
+                const id = "show-" + btoa(unescape(encodeURIComponent(key))).replace(/=/g, "");
+                bar.href = "#" + id;
+                bar.style.textDecoration = "none";
+                bar.style.display = "block";
+                const left = ((showStartMin - startMin) / totalMinutes) * 100;
+                const width = (duration / totalMinutes) * 100;
+                bar.style.left = Math.max(0, left) + "%";
+                bar.style.width = (left < 0 ? width + left : Math.min(width, 100 - left)) + "%";
+                bar.style.top = (slotIndex * 35 + 10) + "px";
+                bar.style.backgroundColor = e.color || "";
+                bar.innerText = e.title;
+                bar.title = e.title + " • " + e.loc + " • " + e.time;
+
+                bar.onclick = (event) => {
+                    // Only stop propagation to prevent zoom selection if clicking bar
+                    event.stopPropagation();
+                };
+                content.appendChild(bar);
+            });
+
+            container.style.height = (slots.length * 35 + 60) + "px";
+            container.appendChild(content);
+
+            // Zoom Selection Logic
+            let isDragging = false, startX = 0, selection = null;
+            container.onmousedown = (e) => {
+                if (e.target.className !== "timeline-container" && e.target.className !== "timeline-content") return;
+                isDragging = true; startX = e.offsetX;
+                selection = document.createElement("div"); selection.className = "zoom-selection";
+                selection.style.left = startX + "px"; container.appendChild(selection);
+            };
+            window.onmousemove = (e) => {
+                if (!isDragging) return;
+                const rect = container.getBoundingClientRect();
+                const currentX = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+                const x1 = Math.min(startX, currentX), x2 = Math.max(startX, currentX);
+                selection.style.left = x1 + "px"; selection.style.width = (x2 - x1) + "px";
+            };
+            window.onmouseup = (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                const rect = container.getBoundingClientRect();
+                const x1 = parseFloat(selection.style.left), w = parseFloat(selection.style.width);
+                container.removeChild(selection);
+                if (w > 20) {
+                    const pct1 = x1 / rect.width, pct2 = (x1 + w) / rect.width;
+                    const zoomStart = startMin + (pct1 * totalMinutes);
+                    const zoomEnd = startMin + (pct2 * totalMinutes);
+                    renderTimeline(evs, ds, { start: zoomStart, end: zoomEnd });
+                }
+            };
+
+            wrapper.appendChild(container);
+        }
+        const cals = document.getElementById("calendars");
+        cals.appendChild(renderCalendar(1, 2026)); cals.appendChild(renderCalendar(2, 2026));
+    </script>
+</body>
+
+</html>
