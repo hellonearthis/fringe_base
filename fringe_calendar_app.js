@@ -198,7 +198,7 @@ function renderLegends(events, container, type, currentFilters = {}) {
                     renderFilteredDay();
                 };
 
-                item.innerHTML = `<span class="legend-color-dot" style="background-color: ${color}"></span> <span>${venue}</span>`;
+                item.innerHTML = `<span class="legend-color-dot" style="background: ${color}"></span> <span>${venue}</span>`;
                 legendDiv.appendChild(item);
                 addedItems = true;
             }
@@ -301,7 +301,7 @@ function renderFilteredDay() {
                 <div class="event-info">
                     <div class="event-title">${genreEmoji}${event.title} ${isPriorityShow ? '⭐' : ''}</div>
                     <div class="event-meta">
-                        <span class="venue-pill" style="background-color: ${venueColor}">${event.loc}</span>
+                        <span class="venue-pill" style="background: ${venueColor}">${event.loc}</span>
                     </div>
                 </div>
             `;
@@ -423,7 +423,7 @@ function renderTimeline(events, dateString, zoomRange = null) {
         barElement.style.left = `${Math.max(0, leftPercent)}%`;
         barElement.style.width = `${leftPercent < 0 ? widthPercent + leftPercent : Math.min(widthPercent, 100 - leftPercent)}%`;
         barElement.style.top = `${rowIndex * 35 + 10}px`;
-        barElement.style.backgroundColor = VENUE_COLORS[event.loc] || '';
+        barElement.style.background = VENUE_COLORS[event.loc] || '';
         barElement.style.pointerEvents = 'auto'; // Re-enable for clicks
         barElement.innerText = genreEmoji + event.title;
 

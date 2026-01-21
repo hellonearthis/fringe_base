@@ -13,6 +13,7 @@ It’s a passion project from the "classic" era of coding, repurposed and polish
 - **Interactive Calendar**: A standalone HTML application that provides:
     - Monthly views for Feb/March.
     - **Interactive Legends**: Filter by Genre or Venue by clicking on legend items.
+    - **Analogous Color Gradients**: Venues sharing a base hub cycle through solid and analogous gradients (-45° and +45°) for better visual distinction.
     - **Cross-Filtering**: Genre legend dynamically updates based on venue selection (and vice-versa).
     - **Timeline Visualization**: Drag-to-zoom timeline with current time indicator.
     - **Quick Search**: Click timeline bars to jump directly to show descriptions.

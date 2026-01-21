@@ -19,18 +19,60 @@ scrapedEvents.forEach(ev => {
 });
 
 // 2. CONFIGURATION
-const vividColors = [
-    '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981',
-    '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef',
-    '#f43f5e', '#fbbf24', '#a3e635', '#34d399', '#22d3ee',
-    '#60a5fa', '#818cf8', '#a78bfa', '#e879f9', '#fb7185'
-];
-
 const uniqueVenues = [...new Set(scrapedEvents.map(e => e.loc))].sort();
 const venueColorMap = {};
+
+// Carefully spaced hues (perceptually distinct)
+const hues = [
+    0,    // red
+    20,   // orange-red
+    45,   // orange
+    75,   // yellow-green
+    110,  // green
+    160,  // teal
+    200,  // cyan-blue
+    245,  // blue
+    290   // purple
+];
+
+// Visual tuning
+const SATURATION = 80;
+const BASE_LIGHTNESS = 52;
+
+// First N buttons stay solid
+const SOLID_LIMIT = 8;
+
+// Analogous gradient accent
+function gradientFor(h, targetH, s, l) {
+    return `linear-gradient(to right,
+    hsl(${h}, ${s}%, ${l}%) 0%,
+    hsl(${h}, ${s}%, ${l}%) 50%,
+    hsl(${targetH}, ${s}%, ${l}%) 100%
+  )`;
+}
+
+const hueUsageCount = {};
 uniqueVenues.forEach((venue, index) => {
-    venueColorMap[venue] = vividColors[index % vividColors.length];
+    const hueIndex = index % hues.length;
+    const hue = hues[hueIndex];
+
+    if (hueUsageCount[hueIndex] === undefined) hueUsageCount[hueIndex] = 0;
+    const count = hueUsageCount[hueIndex]++;
+
+    if (count === 0) {
+        // Clean solid colour
+        venueColorMap[venue] = `hsl(${hue}, ${SATURATION}%, ${BASE_LIGHTNESS}%)`;
+    } else if (count === 1) {
+        // Gradient to Analogous 1 (Hue - 45)
+        const h1 = (hue - 45 + 360) % 360;
+        venueColorMap[venue] = gradientFor(hue, h1, SATURATION, BASE_LIGHTNESS);
+    } else {
+        // Gradient to Analogous 2 (Hue + 45)
+        const h2 = (hue + 45) % 360;
+        venueColorMap[venue] = gradientFor(hue, h2, SATURATION, BASE_LIGHTNESS);
+    }
 });
+
 
 const genreEmojiMap = {
     'Comedy': '😂',
@@ -184,5 +226,5 @@ const htmlTemplate = `<!DOCTYPE html>
 </body>
 </html>`;
 
-fs.writeFileSync('./fringe_calendar.html', htmlTemplate);
-console.log('Successfully generated fringe_calendar.html (Month View)');
+fs.writeFileSync('./index.html', htmlTemplate);
+console.log('Successfully generated calander  index.html (Month View)');

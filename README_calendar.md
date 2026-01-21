@@ -25,14 +25,17 @@ node generate_calendar.js
 
 ## Features Generated
 - **Monthly Calendar Grids**: February and March 2026
-- **Star Icons**: Colored stars on days with favorite shows
 - **Show Timeline**: Visual timeline of shows for selected day
 - **Click-and-Drag Zoom**: Zoom into time ranges on the timeline
 - **Jump to Description**: Click timeline bars to scroll to show details
-- **Priority Highlighting**: Favorite shows get colored badges and stars
+- **Analogous Venue Colors**: Venues cycle through (Solid, Analogous -45°, Analogous +45°) to ensure visual distinctness even when sharing a base hue.
 
 ## How It Works
 1. Loads event data and priority URLs
-2. Assigns unique colors to each priority show
-3. Generates `fringe_data.js` with data and color mappings
-4. Generates self-contained `fringe_calendar.html` with inline CSS/JS
+2. Maps venues to unique base hues
+3. Processes venues sharing the same hue using an **analogous color cycle**:
+    - **1st usage**: Solid base color
+    - **2nd usage**: Gradient fading to hue -45°
+    - **3rd usage**: Gradient fading to hue +45°
+4. Generates `fringe_data.js` with data and color mappings
+5. Generates self-contained `index.html` with modern, responsive styling

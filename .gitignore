@@ -14,3 +14,6 @@ npm-debug.log*
 .vscode/
 *.swp
 *.swo
+
+# junk
+old_data/
