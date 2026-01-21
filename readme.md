@@ -10,17 +10,19 @@ It’s a passion project from the "classic" era of coding, repurposed and polish
 ## Features
 - **Discovery**: Automatically scans the Fringe ticket site for all upcoming events.
 - **Priority**: Support for a `f2026.csv` list of favorite shows to highlight.
-- **Interactive Calendar**: A standalone HTML file (`fringe_calendar.html`) that provides:
+- **Interactive Calendar**: A standalone HTML application that provides:
     - Monthly views for Feb/March.
-    - Quick-hover show titles.
-    - Interactive Timeline with zoom and drag support.
-    - Direct links to ticket pages.
+    - **Interactive Legends**: Filter by Genre or Venue by clicking on legend items.
+    - **Cross-Filtering**: Genre legend dynamically updates based on venue selection (and vice-versa).
+    - **Timeline Visualization**: Drag-to-zoom timeline with current time indicator.
+    - **Quick Search**: Click timeline bars to jump directly to show descriptions.
 
 ## Project Architecture
 - `index.js`: The Puppeteer-based scraper. Navigates, discovers, and extracts event metadata.
-- `generate_calendar.js`: The data processor. Takes scraped JSON and builds the interactive HTML/JS viewer.
-- `fringe_calendar.html`: The final presentation layer (standalone).
-- `fringe_style.css`: Modern, responsive styling for the calendar.
+- `generate_calendar.js`: The data processor. Takes scraped JSON and builds the data structures for the browser.
+- `fringe_calendar_app.js`: Core client-side logic for filtering, rendering, and interaction.
+- `fringe_style.css`: Modern, responsive styling for the calendar and interactive components.
+- `fringe_calendar.html`: The main entry point (standalone viewer).
 
 ## Quick Start
 1.  **Install Dependencies**: `npm install puppeteer`
