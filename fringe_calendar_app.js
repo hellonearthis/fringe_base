@@ -405,6 +405,7 @@ function renderTimeline(events, dateString, zoomRange = null) {
         barElement.className = 'show-bar' + (isPriorityShow ? ' priority' : '');
         const showId = getShowId(event);
         barElement.href = `#${showId}`;
+        barElement.dataset.showId = showId;
         barElement.draggable = false;
 
         const leftPercent = ((eventStartMinutes - rangeStartMinutes) / totalRangeMinutes) * 100;
@@ -463,6 +464,7 @@ function renderTimeline(events, dateString, zoomRange = null) {
     let startY = 0;
     let selectionDiv = null;
     let activePointerId = null;
+    let pendingClickBar = null;
 
     timelineContainer.addEventListener('pointerdown', (e) => {
         // Only trigger on left-click (0)
@@ -475,6 +477,7 @@ function renderTimeline(events, dateString, zoomRange = null) {
         isDragging = true;
         didDrag = false;
         activePointerId = e.pointerId;
+        pendingClickBar = e.target.closest('.show-bar');
 
         const rect = timelineContainer.getBoundingClientRect();
         startX = e.clientX - rect.left;
@@ -487,6 +490,7 @@ function renderTimeline(events, dateString, zoomRange = null) {
         selectionDiv.style.top = startY + 'px';
         selectionDiv.style.width = '0px';
         selectionDiv.style.height = '0px';
+        selectionDiv.style.pointerEvents = 'none'; // CRITICAL: Let clicks pass through!
         timelineContainer.appendChild(selectionDiv);
 
         // This ensures moving outside the box doesn't break the drag
@@ -544,7 +548,21 @@ function renderTimeline(events, dateString, zoomRange = null) {
             const zoomEnd = rangeStartMinutes + (pct2 * totalRangeMinutes);
 
             renderTimeline(events, dateString, { start: zoomStart, end: zoomEnd });
+        } else if (!didDrag && pendingClickBar) {
+            // MANUAL CLICK HANDLING (Bypasses pointer capture issues)
+            const showId = pendingClickBar.dataset.showId;
+            console.log('Manual pointer click triggered for:', showId);
+
+            const targetEl = document.getElementById(showId);
+            if (targetEl) {
+                history.pushState(null, null, `#${showId}`);
+                targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            // Mark as dragged so the subsequent 'click' event is ignored
+            didDrag = true;
         }
+
+        pendingClickBar = null;
 
         // Short timeout to prevent a regular "click" event from firing immediately after a drag
         setTimeout(() => {
