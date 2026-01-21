@@ -89,9 +89,10 @@ function getGenreEmoji(genreStr) {
     return '';
 }
 
-function getShowId(title) {
-    if (!title) return "unknown";
-    return `show-${title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`;
+function getShowId(event) {
+    if (!event || !event.title) return "unknown";
+    const raw = (event.title + (event.loc || "") + (event.time || "")).replace(/[^a-z0-9]/gi, "-").toLowerCase();
+    return `show-${raw}`;
 }
 
 function renderLegends(events, container, type, currentFilters = {}) {
@@ -276,7 +277,7 @@ function renderFilteredDay() {
             const encodedTitle = event.title.replace(/"/g, '&quot;');
             const isPriorityShow = PRIORITY_URLS.includes(event.link);
             const genreEmoji = getGenreEmoji(event.genre);
-            const showId = getShowId(event.title);
+            const showId = getShowId(event);
 
             const eventCard = document.createElement('div');
             eventCard.className = 'event-card';
@@ -402,8 +403,9 @@ function renderTimeline(events, dateString, zoomRange = null) {
         const genreEmoji = getGenreEmoji(event.genre);
 
         barElement.className = 'show-bar' + (isPriorityShow ? ' priority' : '');
-        const showId = getShowId(event.title);
+        const showId = getShowId(event);
         barElement.href = `#${showId}`;
+        barElement.draggable = false;
 
         const leftPercent = ((eventStartMinutes - rangeStartMinutes) / totalRangeMinutes) * 100;
         const widthPercent = (eventDuration / totalRangeMinutes) * 100;
@@ -415,17 +417,20 @@ function renderTimeline(events, dateString, zoomRange = null) {
         barElement.style.pointerEvents = 'auto'; // Re-enable for clicks
         barElement.innerText = genreEmoji + event.title;
         barElement.onclick = (e) => {
+            console.log('Timeline bar clicked. showId:', showId);
             if (didDrag) {
-                e.preventDefault(); // Stop link from opening if we were zooming
+                console.log('Click ignored because of drag.');
+                e.preventDefault();
                 return;
             }
             const targetEl = document.getElementById(showId);
             if (targetEl) {
+                console.log('Target element found, jumping to:', showId);
                 e.preventDefault();
-                // Update URL without native jump
                 history.pushState(null, null, `#${showId}`);
-                // Robust scroll
                 targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                console.warn('Target element NOT found for id:', showId);
             }
         };
 
@@ -464,7 +469,8 @@ function renderTimeline(events, dateString, zoomRange = null) {
         if (e.button !== 0) return;
 
         // Prevent browser from trying to drag the element itself (crucial for "Drag Anywhere")
-        e.preventDefault();
+        // REMOVED preventDefault here to ensure click events on children aren't blocked
+        // e.preventDefault();
 
         isDragging = true;
         didDrag = false;
