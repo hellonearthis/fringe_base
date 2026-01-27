@@ -8,6 +8,7 @@ This project was born out of a personal need many years ago—long before "vibe 
 It’s a passion project from the "classic" era of coding, repurposed and polished for 2026.
 
     - **Rich Show Details**: Detailed show cards including full descriptions, genre tags, and direct booking links.
+    - **Multi-Show Support**: Accurate scheduling for events with multiple performances per day or varying times.
     - **Timeline Visualization**: Drag-to-zoom timeline with current time indicator.
     - **Legend Controls**: "Clear" and "All" buttons on the Genre Legend for quick filtering.
     - **Bulletproof Navigation**: Standardized HTML anchors and robust `scrollIntoView` logic for jumping from the timeline to show descriptions with visual feedback.

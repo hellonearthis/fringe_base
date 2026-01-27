@@ -11,6 +11,7 @@ To deploy this viewer, you need:
 
 ## Features
 - **Calendar View**: Monthly grids for February and March 2026
+- **Multi-Show Support**: Correctly handles multiple shows per day and different times on different days.
 - **Favorite Indicators**: Colored stars ★ on days with favorite shows
 - **Interactive Legends**: Click any Genre or Venue to filter the view
 - **Cross-Filtering**: Legends only show categories available under current filters

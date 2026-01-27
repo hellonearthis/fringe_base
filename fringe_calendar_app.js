@@ -248,7 +248,26 @@ function selectDay(dateString, clickedCell) {
     }
 
     currentDateString = dateString;
-    currentDayOriginalEvents = ALL_EVENTS.filter(event => event.dateList && event.dateList.includes(dateString));
+
+    // Build the list of events for this day
+    // If an event has a detailedSchedule (new scraper format), we use that to find specific times.
+    // If an event has multiple shows on this day, we create multiple event instances.
+    currentDayOriginalEvents = [];
+
+    ALL_EVENTS.forEach(event => {
+        if (event.detailedSchedule && event.detailedSchedule.length > 0) {
+            // detailedSchedule available: find all shows for this specific date
+            const showsToday = event.detailedSchedule.filter(s => s.date === dateString);
+            showsToday.forEach(show => {
+                // Clone the event and set the specific time for this performance
+                const eventInstance = { ...event, time: show.time };
+                currentDayOriginalEvents.push(eventInstance);
+            });
+        } else if (event.dateList && event.dateList.includes(dateString)) {
+            // Legacy/Fallback: Use the generic time if detailed schedule is missing
+            currentDayOriginalEvents.push(event);
+        }
+    });
 
     // Default: all active
     activeGenres = new Set();
@@ -325,7 +344,7 @@ function renderFilteredDay() {
                     <div class="event-description">${event.desc || ''}</div>
                     <div class="event-meta">
                         <span class="venue-pill" style="background: ${venueColor}">${event.loc}</span>
-                        <a href="${event.link}" target="_blank" class="book-link" onclick="event.stopPropagation()">Book Tickets ↗</a>
+                        <a href="${event.link}" target="_blank" class="book-link" onclick="event.stopPropagation()">Check Tickets on the Fringe Site ↗</a>
                     </div>
                 </div>
             `;

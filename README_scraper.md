@@ -30,5 +30,6 @@ node index.js
    - Description
    - Available dates (from calendar or schedule list)
    - Performance time
+   - **Detailed Schedule**: Full list of specific performance times for all dates (extracts `data-performances` JSON)
 
 Data is auto-saved every 10 events to prevent data loss.

@@ -180,30 +180,43 @@ const fs = require('fs');
             if (timeListItem) performanceTime = timeListItem.innerText.trim();
           }
 
-          // --- EXTRACT GENRE ---
-          const genreKeywords = ['Comedy', 'Theatre', 'Music', 'Cabaret', 'Dance', 'Circus', 'Visual Arts', 'Talk', 'Workshop', 'Family', 'Improv', 'Poetry', 'Spoken Word', 'Musical', 'Interactive'];
-          let genre = "General";
+          // --- DETAILED SCHEDULE EXTRACTION ---
+          // Parse the data-performances attribute which contains the authoritative schedule
+          let detailedSchedule = [];
+          try {
+            const eventDataEl = document.querySelector('#event-data');
+            if (eventDataEl) {
+              const rawJson = eventDataEl.getAttribute('data-performances');
+              if (rawJson) {
+                const perfData = JSON.parse(rawJson);
+                // perfData.times is an object: { "20/02/2026": [ { performanceTime: "7:00 pm", ... } ], ... }
+                if (perfData.times) {
+                  Object.keys(perfData.times).forEach(dateKey => {
+                    const dailyShows = perfData.times[dateKey];
+                    dailyShows.forEach(show => {
+                      // Convert dateKey "20/02/2026" to "20 February 2026"
+                      // But show.performanceDate often has "20th February 2026 7:00 pm"
+                      // We can use the date key or the object.
 
-          // 1. Try to get from the explicit genre tag in the title block
-          const titleGenreTag = document.querySelector('div.title small');
-          if (titleGenreTag && titleGenreTag.innerText.trim().length > 0) {
-            genre = titleGenreTag.innerText.trim();
-          } else {
-            // 2. Fallback: Scan list items for genre
-            const allListItems = Array.from(document.querySelectorAll('ul.schedule li'))
-              .map(li => li.innerText.trim());
+                      // Let's rely on our own formatting to match the app's standard: 
+                      // dateKey is DD/MM/YYYY.
+                      const [d, m, y] = dateKey.split('/');
+                      const monthIndex = parseInt(m) - 1;
+                      const dateObj = new Date(y, monthIndex, d);
+                      const dateStr = dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
-            // Match against known keywords
-            const foundGenre = allListItems.find(text => genreKeywords.some(keyword => text.includes(keyword)));
-            if (foundGenre) {
-              genre = foundGenre;
-            } else if (allListItems.length > 0) {
-              // Fallback: take the first relevant item
-              const candidate = allListItems[0];
-              if (!candidate.includes('$') && !candidate.match(/\d/) && candidate !== venueLocation) {
-                genre = candidate;
+                      detailedSchedule.push({
+                        date: dateStr, // e.g., "20 February 2026"
+                        time: show.performanceTime, // e.g., "7:00 pm"
+                        iso: show.performanceRealTime // e.g., "2026-02-20 19:00:00"
+                      });
+                    });
+                  });
+                }
               }
             }
+          } catch (e) {
+            console.error("Error parsing detailed schedule", e);
           }
 
           return {
@@ -212,7 +225,8 @@ const fs = require('fs');
             description,
             scheduleList: availableDates,
             time: performanceTime,
-            genre: genre
+            genre: genre,
+            detailedSchedule: detailedSchedule // Return the new rich data
           };
         });
 
@@ -225,7 +239,8 @@ const fs = require('fs');
           link: currentEventUrl,
           schedule: eventMetadata.scheduleList,
           time: eventMetadata.time,
-          genre: eventMetadata.genre
+          genre: eventMetadata.genre,
+          detailedSchedule: eventMetadata.detailedSchedule
         });
 
         // Periodic save every 10 items to preserve progress

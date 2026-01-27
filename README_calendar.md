@@ -38,5 +38,6 @@ node generate_calendar.js
     - **1st usage**: Solid base color
     - **2nd usage**: Gradient fading to hue -45°
     - **3rd usage**: Gradient fading to hue +45°
-4. Generates `fringe_data.js` with data and color mappings
-5. Generates self-contained `index.html` with modern, responsive styling
+4. Preserves detailed schedule data for multi-show support
+5. Generates `fringe_data.js` with data and color mappings
+6. Generates self-contained `index.html` with modern, responsive styling
