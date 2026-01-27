@@ -190,7 +190,10 @@ const htmlTemplate = `<!DOCTYPE html>
     <div class="container">
         <div class="title-container">
             <h1>Wellington Fringe 2026</h1>
-            <p style="color: var(--text-dim)">The data on this page might not be correct so please check <a class="event-link" href="https://wellingtonfringe.co.nz/" style="text-decoration: underline;">wellingtonfringe.co.nz</a> for the latest information.</br>Some events might have more than one show a day and might not be displayed correctly here. This is due to the data being scraped from the website and not being able to handle multiple shows per day.</br></p>
+            <p style="color: var(--text-dim)">The data on this page might not be correct so please check <a class="event-link" href="https://wellingtonfringe.co.nz/" style="text-decoration: underline;">wellingtonfringe.co.nz</a> for the latest information.</br>
+            Some events might have more than one show a day and might not be displayed correctly here.</br>
+            Sorry about that, please check the website for the most up to date information.</br></p>
+            </br>
             <p style="color: var(--text)">Click a date to see shows on that day.</p>
         </div>
 
