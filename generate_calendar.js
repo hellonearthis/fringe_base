@@ -5,18 +5,105 @@
 const fs = require('fs');
 
 // 1. LOAD DATA
-const scrapedEvents = JSON.parse(fs.readFileSync('./fringe_all_events.json', 'utf8'));
+const scrapedEventsRaw = JSON.parse(fs.readFileSync('./fringe_all_events.json', 'utf8'));
 const priorityShowUrls = [];
 
-// 1b. PRE-PROCESS DATA (Compute Dates)
-scrapedEvents.forEach(ev => {
-    if (ev.schedule) {
-        // Split "4 March 2026, 5 March 2026" into array
-        ev.dateList = ev.schedule.split(',').map(s => s.trim());
+// 1a. DEDUPLICATE DATA
+// Some events appear twice with slightly different URLs (e.g. trailing slash vs no slash)
+// We deduplicate based on Title + Location + Time + Schedule
+const scrapedEvents = [];
+const seenKeys = new Set();
+
+scrapedEventsRaw.forEach(ev => {
+    // Create a unique key for the event properties that matter for the calendar
+    const key = `${ev.title}|${ev.loc}|${ev.time}|${ev.schedule}`;
+
+    if (!seenKeys.has(key)) {
+        seenKeys.add(key);
+        scrapedEvents.push(ev);
     } else {
-        ev.dateList = [];
+        // console.log('Skipping duplicate:', ev.title);
     }
 });
+console.log(`Deduplication: Reduced ${scrapedEventsRaw.length} events to ${scrapedEvents.length}.`);
+
+// 1b. LOAD VERIFIED SCHEDULE (Ground Truth)
+let verifiedSchedule = {};
+try {
+    verifiedSchedule = JSON.parse(fs.readFileSync('./verified_schedule.json', 'utf8'));
+    console.log(`Loaded verified schedule for ${Object.keys(verifiedSchedule).length} shows.`);
+} catch (e) {
+    console.warn("Could not load verified_schedule.json, using scraper defaults.");
+}
+
+// Helper to convert "13/02/2026" -> "13 February 2026"
+function convertVerifiedDate(dStr) {
+    const [d, m, y] = dStr.split('/');
+    const dateObj = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+    return dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+// 1c. PRE-PROCESS DATA (Compute Dates)
+let verifiedCount = 0;
+let scraperFallbackCount = 0;
+
+scrapedEvents.forEach(ev => {
+    // Try to find verified dates based on TITLE
+    let verifiedVenues = verifiedSchedule[ev.title];
+    let matchedDates = null;
+
+    if (verifiedVenues) {
+        // We have verified data for this title. Now check which venue matches.
+        // ev.loc is the scraping location (e.g. "Circus Bar")
+        // verifiedVenues keys are e.g. "Circus Bar" or "Whisky & Wood"
+
+        const locNormal = ev.loc.toLowerCase().trim();
+
+        // 1. Direct Match
+        // 2. Fuzzy Match (substring)
+
+        // Exact match check
+        for (const [vName, dates] of Object.entries(verifiedVenues)) {
+            if (vName.toLowerCase().trim() === locNormal) {
+                matchedDates = dates;
+                break;
+            }
+        }
+
+        // Fallback: Check for substring inclusion (e.g. "Circus Bar" in "The Circus Bar")
+        if (!matchedDates) {
+            for (const [vName, dates] of Object.entries(verifiedVenues)) {
+                const verifiedNorm = vName.toLowerCase().trim();
+                if (verifiedNorm.includes(locNormal) || locNormal.includes(verifiedNorm)) {
+                    matchedDates = dates;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (matchedDates && matchedDates.length > 0) {
+        // Use the verified dates!
+        const uniqueDates = [...new Set(matchedDates)];
+        ev.dateList = uniqueDates.map(convertVerifiedDate);
+        verifiedCount++;
+    } else {
+        // Fallback to original schedule string logic
+        scraperFallbackCount++;
+        // console.log(`No verified venue match for "${ev.title}" at "${ev.loc}"`);
+        if (ev.schedule) {
+            ev.dateList = ev.schedule.split(',').map(s => s.trim());
+        } else {
+            ev.dateList = [];
+        }
+    }
+});
+
+console.log(`Verification Status: ${verifiedCount} shows verified against official schedule.`);
+console.log(`Verification Status: ${scraperFallbackCount} shows using original scraper data (no match found).`);
+if (scraperFallbackCount > 0) {
+    console.warn("Note: Some shows did not match the verified schedule titles exactly. They are still included but use unverified dates.");
+}
 
 // 2. CONFIGURATION
 const uniqueVenues = [...new Set(scrapedEvents.map(e => e.loc))].sort();
